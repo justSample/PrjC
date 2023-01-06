@@ -8,15 +8,21 @@
 #define CHAR_LEN 25
 #define FILE_NAME "ChessGames.txt"
 
+struct stPerson {
+    char Fio[CHAR_LEN];
+    int Score;
+};
+
+typedef struct stPerson Person;
+
 struct tChessGame 
 {
     int id;
-    char PlayerFioBlack[CHAR_LEN];
-    char PlayerFioWhite[CHAR_LEN];
+    Person PlayerBlack;
+    Person PlayerWhite;
     char DebutName[CHAR_LEN];
     int Result;
     int TimeSpent;
-    int Score;
 };
 
 typedef struct tChessGame ChessGame;
@@ -38,6 +44,7 @@ void RemoveNL(char* msg);
 void Save();
 void Load();
 
+void PrintTitle();
 void PrintGame(ChessGame* game);
 char* IntToStr(const int* number);
 void SetGame(ChessGame* to, ChessGame* from);
@@ -55,56 +62,6 @@ int main(void)
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
     char *locale = setlocale(LC_ALL, "");
-
-    int* intes = (int*)malloc(sizeof(int) * 3);
-
-
-
-    //intes[0] = 12;
-    *(intes + 1) = 14;
-    intes[1] = 25;
-    intes[2] = 4;
-
-    //ChessGame** pGames = (ChessGame**)malloc(sizeof(ChessGame) * 20);
-
-    //games[0].id = 3;
-    //games[0].Result = 333;
-    //games[0].TimeSpent = 999;
-
-    //pGames[0] = &games[0];
-
-    //printf("%d, %d, %d", (*pGames[0]).id, (*pGames[0]).Result, (*pGames[0]).TimeSpent);
-
-    //free(games);
-    //free(pGames);
-
-    //void* ptr = games;
-
-    //strcpy(words, "Hello!");
-
-    //char str[] = "Example text check need";
-
-    //printf("%s\n", str);
-
-    //char* p = strstr(str, "e");
-
-    //printf("%s", p);
-
-    //int** pptrInt = &intes;
-    ////**pptrInt++;
-
-    //printf("%d: %p\n", *(**&pptrInt + 1), **&pptrInt + 1);
-
-    //for (int i = 0; i < 3; i++)
-    //{
-    //    printf("Int: %d, P: %p\n", intes[i], &intes[i]);
-    //}
-
-    //intes
-
-    //printf("%p : %p", intes[0], pptrInt);
-    
-    //return 0;
 
     Init();
     Load();
@@ -197,20 +154,53 @@ void AddRecord() {
 
     ChessGame chessGame;
 
+    chessGame.id = -1;
+
+    chessGame.PlayerWhite.Score = -1;
+    chessGame.PlayerBlack.Score = -1;
+
     chessGame.Result = -1;
     chessGame.TimeSpent = -1;
-    chessGame.Score = -1;
-    chessGame.id = -1;
 
     getchar();
 
     printf("Фамилия и имя игрока за белую сторону: ");
-    fgets(chessGame.PlayerFioWhite, (sizeof(chessGame.PlayerFioWhite) / sizeof(chessGame.PlayerFioWhite[0])), stdin);
-    RemoveNL(chessGame.PlayerFioWhite);
+    fgets(chessGame.PlayerWhite.Fio, (sizeof(chessGame.PlayerWhite.Fio) / sizeof(chessGame.PlayerWhite.Fio[0])), stdin);
+    RemoveNL(chessGame.PlayerWhite.Fio);
+
+    while (chessGame.PlayerWhite.Score == -1)
+    {
+        int result;
+        printf("Количество очков игрока за белую сторону: ");
+        scanf("%d", &result);
+        if (result > 0)
+        {
+            chessGame.PlayerWhite.Score = result;
+        }
+        else
+        {
+            printf("Вы ввели плохие данные. Будьте внимательнее и попробуйте ещё раз!\n");
+        }
+    }
 
     printf("Фамилия и имя игрока за черную сторону: ");
-    fgets(chessGame.PlayerFioBlack, (sizeof(chessGame.PlayerFioBlack) / sizeof(chessGame.PlayerFioBlack[0])), stdin);
-    RemoveNL(chessGame.PlayerFioBlack);
+    fgets(chessGame.PlayerBlack.Fio, (sizeof(chessGame.PlayerBlack.Fio) / sizeof(chessGame.PlayerBlack.Fio[0])), stdin);
+    RemoveNL(chessGame.PlayerBlack.Fio);
+
+    while (chessGame.PlayerBlack.Score == -1)
+    {
+        int result;
+        printf("Количество очков игрока за черную сторону: ");
+        scanf("%d", &result);
+        if (result > 0)
+        {
+            chessGame.PlayerBlack.Score = result;
+        }
+        else
+        {
+            printf("Вы ввели плохие данные. Будьте внимательнее и попробуйте ещё раз!\n");
+        }
+    }
 
     printf("Название дебюта: ");
     fgets(chessGame.DebutName, (sizeof(chessGame.DebutName) / sizeof(chessGame.DebutName[0])), stdin);
@@ -248,21 +238,6 @@ void AddRecord() {
         }
     }
 
-    while (chessGame.Score == -1)
-    {
-        int result;
-        printf("Количество очков: ");
-        scanf("%d", &result);
-        if (result > 0)
-        {
-            chessGame.Score = result;
-        }
-        else
-        {
-            printf("Вы ввели плохие данные. Будьте внимательнее и попробуйте ещё раз!\n");
-        }
-    }
-
     for (int i = 0; i < ARR_LEN; i++) 
     {
         if (_chessGames[i].id == -1) 
@@ -280,8 +255,7 @@ void AddRecord() {
 
 void PrintAllGames() {
 
-    printf("\n");
-    printf("|%-3s||%-25s||%-25s||%-25s||%-10s||%-5s||%-5s|\n", "ID", "Фам. и имя игрока белых", "Фам. и имя игрока черных", "Назв. дебюта", "Результат", "Время", "Очки");
+    PrintTitle();
 
     for (int i = 0; i < ARR_LEN; i++)
     {
@@ -333,38 +307,48 @@ void RemoveRecord() {
 
 void PrintBestPlayers() 
 {
-    ChessGame** games = malloc(sizeof(ChessGame*) * ARR_LEN);
+    
+    Person** persons = NULL; //malloc(sizeof(Person*) * lenPersons);
+
+    int lenPersons = 0;
 
     for (int i = 0; i < ARR_LEN; i++)
     {
-        games[i] = &_chessGames[i];
+        if (_chessGames[i].id == -1) continue;
+
+        lenPersons += 2;
+        persons = realloc(persons, sizeof(Person*) * lenPersons);
+
+        persons[lenPersons - 2] = &_chessGames[i].PlayerWhite;
+        persons[lenPersons - 1] = &_chessGames[i].PlayerBlack;
+
     }
 
     //Сортировка пузырьком
-    for (int i = 0; i < ARR_LEN - 1; i++) {
+    for (int i = 0; i < lenPersons - 1; i++) {
         // сравниваем два соседних элемента.
-        for (int j = 0; j < ARR_LEN - i - 1; j++)
+        for (int j = 0; j < lenPersons - i - 1; j++)
         {
             //Чтоб сменить с 'большего к меньшему' на 'меньшего к большему' смени знак < на > и наоборот
-            if ((*(games[j])).Score < (*(games[j + 1])).Score)
+            if (persons[j]->Score < persons[j + 1]->Score)
             {
-                ChessGame* temp = NULL;
-                temp = games[j];
-                games[j] = games[j + 1];
-                games[j + 1] = temp;
+                Person* temp = NULL;
+                temp = persons[j];
+                persons[j] = persons[j + 1];
+                persons[j + 1] = temp;
             }
         }
     }
 
     printf("\n");
-    printf("|%-3s||%-25s||%-25s||%-25s||%-10s||%-5s||%-5s|\n", "ID", "Фам. и имя игрока белых", "Фам. и имя игрока черных", "Назв. дебюта", "Результат", "Время", "Очки");
+    printf("|%-25s||%-5s|\n", "ФИО игрока", "Очков");
 
     for (int i = 0; i < 3; i++)
     {
-        PrintGame(&*games[i]);
+        printf("|%-25s||%-5d|\n", persons[i]->Fio, persons[i]->Score);
     }
 
-    free(games);
+    free(persons);
 }
 
 void PrintLongerDebutByName() 
@@ -409,8 +393,7 @@ void PrintLongerDebutByName()
         }
     }
 
-    printf("\n");
-    printf("|%-3s||%-25s||%-25s||%-25s||%-10s||%-5s||%-5s|\n", "ID", "Фам. и имя игрока белых", "Фам. и имя игрока черных", "Назв. дебюта", "Результат", "Время", "Очки");
+    PrintTitle();
 
     for (int i = 0; i < length; i++)
     {
@@ -434,10 +417,14 @@ void Save()
 
         char txtSave[150];
 
-        strcpy(txtSave, _chessGames[i].PlayerFioWhite);
+        strcpy(txtSave, _chessGames[i].PlayerWhite.Fio);
+        strcat(txtSave, ";");
+        strcat(txtSave, IntToStr(_chessGames[i].PlayerWhite.Score));
         strcat(txtSave, ";");
 
-        strcat(txtSave, _chessGames[i].PlayerFioBlack);
+        strcat(txtSave, _chessGames[i].PlayerBlack.Fio);
+        strcat(txtSave, ";");
+        strcat(txtSave, IntToStr(_chessGames[i].PlayerBlack.Score));
         strcat(txtSave, ";");
 
         strcat(txtSave, _chessGames[i].DebutName);
@@ -447,9 +434,6 @@ void Save()
         strcat(txtSave, ";");
 
         strcat(txtSave, IntToStr(&_chessGames[i].TimeSpent));
-        strcat(txtSave, ";");
-
-        strcat(txtSave, IntToStr(&_chessGames[i].Score));
         strcat(txtSave, ";");
 
         strcat(txtSave, "\n");
@@ -484,17 +468,22 @@ void Load()
             if (_chessGames[i].id != -1) continue;
 
             _chessGames[i].id = (i + 1);
-            strcpy(_chessGames[i].PlayerFioWhite, chessGameText);
+
+            strcpy(_chessGames[i].PlayerWhite.Fio, chessGameText);
             chessGameText = strtok(NULL, ";");
-            strcpy(_chessGames[i].PlayerFioBlack, chessGameText);
+            _chessGames[i].PlayerWhite.Score = atoi(chessGameText);
             chessGameText = strtok(NULL, ";");
+
+            strcpy(_chessGames[i].PlayerBlack.Fio, chessGameText);
+            chessGameText = strtok(NULL, ";");
+            _chessGames[i].PlayerBlack.Score = atoi(chessGameText);
+            chessGameText = strtok(NULL, ";");
+
             strcpy(_chessGames[i].DebutName, chessGameText);
             chessGameText = strtok(NULL, ";");
             _chessGames[i].Result = atoi(chessGameText);
             chessGameText = strtok(NULL, ";");
             _chessGames[i].TimeSpent = atoi(chessGameText);
-            chessGameText = strtok(NULL, ";");
-            _chessGames[i].Score = atoi(chessGameText);
             chessGameText = strtok(NULL, ";"); //Обнуление на всякий
 
             break;
@@ -503,6 +492,13 @@ void Load()
     }
 
     fclose(file);
+}
+
+void PrintTitle() {
+
+    printf("\n");
+    printf("|%-3s||%-25s||%-5s||%-25s||%-5s||%-25s||%-10s||%-5s|\n", "ID", "Фам. и имя игрока белых", "Очков", "Фам. и имя игрока черных", "Очков", "Назв. дебюта", "Результат", "Время");
+
 }
 
 void PrintGame(ChessGame* game) 
@@ -531,14 +527,19 @@ void PrintGame(ChessGame* game)
         break;
     }
 
-    printf("|%-3d||%-25s||%-25s||%-25s||%-10s||%-5d||%-5d|\n",
+    printf("|%-3d||%-25s||%-5d||%-25s||%-5d||%-25s||%-10s||%-5d|\n",
         game->id,
-        game->PlayerFioWhite,
-        game->PlayerFioBlack,
+        
+        game->PlayerWhite.Fio,
+        game->PlayerWhite.Score,
+        
+        game->PlayerBlack.Fio,
+        game->PlayerBlack.Score,
+        
         game->DebutName,
         gameResultText,
-        game->TimeSpent,
-        game->Score);
+        game->TimeSpent
+        );
 }
 
 char* IntToStr(const int* number)
@@ -554,13 +555,16 @@ void SetGame(ChessGame* to, ChessGame* from)
 {
     to->id = from->id;
 
-    strcpy(to->PlayerFioWhite, from->PlayerFioWhite);
-    strcpy(to->PlayerFioBlack, from->PlayerFioBlack);
+    strcpy(to->PlayerWhite.Fio, from->PlayerWhite.Fio);
+    to->PlayerWhite.Score = from->PlayerWhite.Score;
+
+    strcpy(to->PlayerBlack.Fio, from->PlayerBlack.Fio);
+    to->PlayerBlack.Score = from->PlayerBlack.Score;
+
     strcpy(to->DebutName, from->DebutName);
     
     to->Result = from->Result;
     to->TimeSpent = from->TimeSpent;
-    to->Score = from->Score;
 }
 
 
